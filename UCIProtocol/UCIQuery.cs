@@ -31,7 +31,7 @@ namespace UCIProtocol
 
         public static UCIQueryToken UciNewGame()
         {
-            return new UciNewGame();
+            return new UCINewGame();
         }
 
         public static UCIQueryToken PonderHit()
@@ -83,7 +83,7 @@ namespace UCIProtocol
 
         public static UCIQueryToken Uci()
         {
-            return new Uci();
+            return new UCI();
         }
     }
 
@@ -171,7 +171,7 @@ namespace UCIProtocol
         }
     }
 
-    internal class Uci : UCIQueryToken
+    internal class UCI : UCIQueryToken
     {
         private string _name = "uci";
 
@@ -183,7 +183,7 @@ namespace UCIProtocol
         }
     }
 
-    internal class UciNewGame : UCIQueryToken
+    internal class UCINewGame : UCIQueryToken
     {
         private string _name = "ucinewgame";
 

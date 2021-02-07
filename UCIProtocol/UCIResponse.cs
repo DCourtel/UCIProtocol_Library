@@ -23,7 +23,7 @@ namespace UCIProtocol
             }
             else if (response.ToLower().StartsWith("uciok"))
             {
-                return new UciOk();
+                return new UCIOk();
             }
             else if (response.ToLower().StartsWith("readyok"))
             {
@@ -98,7 +98,7 @@ namespace UCIProtocol
         }
     }
 
-    public class UciOk : UCIResponseToken
+    public class UCIOk : UCIResponseToken
     {
         public override string ToString()
         {
