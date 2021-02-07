@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,6 +33,10 @@ namespace UCIProtocol
             else if (response.ToLower().StartsWith("bestmove "))
             {
                 return new BestMove(response);
+            }
+            else if (response.ToLower().StartsWith("option name "))
+            {
+                return new Option(response);
             }
 
             return new UnknownUCIToken(response);
@@ -155,6 +160,133 @@ namespace UCIProtocol
         {
             return $"bestmove {BestMoveValue}{(!string.IsNullOrEmpty(PonderValue) ? $" ponder {PonderValue}" : string.Empty)}";
         }
+    }
+
+    public class Option : UCIResponseToken
+    {
+        public enum optionType
+        {
+            check,
+            spin,
+            combo,
+            button,
+            @string
+        }
+
+        internal Option(string response)
+        {
+            response = response.Substring("option name ".Length);
+            var typeIndex = response.IndexOf(" type ", StringComparison.InvariantCultureIgnoreCase);
+            if (typeIndex == -1) { throw new ArgumentException("Unable to find the «type» keyword in this option."); }
+            this.Name = response.Substring(0, typeIndex);
+            response = response.Substring(typeIndex + " type ".Length);
+            if (response.StartsWith("string default", StringComparison.InvariantCultureIgnoreCase))
+            {
+                //  option name Debug Log File type string default
+                //  option name EvalFile type string default nn-82215d0fd0df.nnue
+                this.OptionType = optionType.@string;
+                var tokens = GetTokens(response);
+                if (tokens.Count == 3)
+                {
+                    this.StringDefaultValue = tokens[2];
+                }
+            }
+            else if (response.StartsWith("spin default ", StringComparison.InvariantCultureIgnoreCase))
+            {
+                //  option name Contempt type spin default 24 min -100 max 100
+                this.OptionType = optionType.spin;
+                var tokens = GetTokens(response);
+                this.SpinDefaultValue = int.Parse(tokens[2]);
+                this.SpinMinValue = int.Parse(tokens[4]);
+                this.SpinMaxValue = int.Parse(tokens[6]);
+            }
+            else if (response.StartsWith("combo default ", StringComparison.InvariantCultureIgnoreCase))
+            {
+                //  option name Analysis Contempt type combo default Both var Off var White var Black var Both
+                this.OptionType = optionType.combo;
+                var tokens = GetTokens(response);
+                this.ComboDefaultValue = tokens[2];
+                var comboValues = new List<string>();
+                for (int i = 4; i < tokens.Count; i += 2)
+                {
+                    comboValues.Add(tokens[i]);
+                }
+                this.ComboValues = new ReadOnlyCollection<string>(comboValues);
+            }
+            else if (response.StartsWith("button", StringComparison.InvariantCultureIgnoreCase))
+            {
+                //  option name Clear Hash type button
+                this.OptionType = optionType.button;
+            }
+            else if (response.StartsWith("check default ", StringComparison.InvariantCultureIgnoreCase))
+            {
+                //  option name Ponder type check default false
+                this.OptionType = optionType.check;
+                var tokens = GetTokens(response);
+                this.CheckDefaultValue = bool.Parse(tokens[2]);
+            }
+            else
+            {
+                throw new ArgumentException("Unable to identify the type of this option.");
+            }
+        }
+
+        public string Name { get; private set; } = string.Empty;
+
+        public optionType OptionType { get; private set; }
+
+        public bool CheckDefaultValue { get; private set; }
+
+        public int SpinDefaultValue { get; private set; }
+
+        public int SpinMinValue { get; private set; }
+
+        public int SpinMaxValue { get; private set; }
+
+        public string ComboDefaultValue { get; private set; }
+
+        public ReadOnlyCollection<string> ComboValues { get; } = new ReadOnlyCollection<string>(new List<string>());
+
+        public string StringDefaultValue { get; private set; } = string.Empty;
+
+        #region Methods
+
+        private List<string> GetTokens(string input)
+        {
+            return input.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+        }
+
+        public override string ToString()
+        {
+            var optionContent = string.Empty;
+            switch (OptionType)
+            {
+                case optionType.check:
+                    optionContent = $" {CheckDefaultValue}";
+                    break;
+                case optionType.spin:
+                    optionContent = $" {SpinDefaultValue} min {SpinMinValue} max {SpinMaxValue}";
+                    break;
+                case optionType.combo:
+                    var comboValues = string.Empty;
+                    foreach (var value in this.ComboValues)
+                    {
+                        comboValues += $" var {value}";
+                    }
+                    optionContent = $" {ComboDefaultValue}{comboValues}";
+                    break;
+                case optionType.button:
+                    return $"option name {Name} type button";
+                case optionType.@string:
+                    optionContent = $"{(!string.IsNullOrEmpty(StringDefaultValue) ? $" {StringDefaultValue}" : string.Empty)}";
+                    break;
+            }
+            return $"option name {Name} type {OptionType} default{optionContent}";
+        }
+
+
+
+        #endregion  Methods
     }
 
     public class UnknownUCIToken : UCIResponseToken
