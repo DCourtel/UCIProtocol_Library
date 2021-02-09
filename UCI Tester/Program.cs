@@ -31,14 +31,13 @@ namespace UCI_Tester
                 Console.WriteLine($"-> {stockfish.SendCommand(UCIQuery.Go(5000))}");
 
                 //  Display Stockfish’s thinks
-                var exit = false;
-                while (!exit)
+                while (true)
                 {
                     var tokens = stockfish.GetResponse();
                     if (tokens.Count > 0)
                     {
                         PrintResponse(tokens);
-                        if (tokens[tokens.Count - 1] is BestMove) { exit = true; }
+                        if (tokens[tokens.Count - 1] is BestMove) { break; }
                     }
                 }
             }

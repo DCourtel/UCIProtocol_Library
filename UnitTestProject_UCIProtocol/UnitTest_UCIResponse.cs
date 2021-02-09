@@ -46,7 +46,7 @@ namespace UnitTestProject_UCIProtocol
             actual = SUT.GetToken(input);
 
             //	Assert
-            Assert.AreEqual(typeof(UCIProtocol.UciOk), actual.GetType());
+            Assert.AreEqual(typeof(UCIProtocol.UCIOk), actual.GetType());
         }
 
         [TestMethod]

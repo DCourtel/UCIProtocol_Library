@@ -16,5 +16,5 @@ using System.Runtime.InteropServices;
 [assembly: Guid("87970d5a-1834-444e-83ac-3d5eda4c28b9")]
 
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.2102.7")]
-[assembly: AssemblyFileVersion("1.0.2102.7")]
+[assembly: AssemblyVersion("1.0.2102.9")]
+[assembly: AssemblyFileVersion("1.0.2102.9")]
